@@ -1,0 +1,36 @@
+
+name: GAMENGINE Native Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ python3
+
+      - name: Configure
+        run: cmake -S native -B native/build
+
+      - name: Compile
+        run: cmake --build native/build --parallel 2
+
+      - name: Test native CLI
+        run: |
+          printf "create Player\nlist\nquit\n" \
+            | native/build/gamengine-cli
+
+      - name: Test Python bridge
+        run: python3 languages/python/bridge.py
