@@ -1,36 +1,39 @@
 
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 
-ENGINE="GAMENGINE"
-VERSION="0.1.0"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+CLI="$ROOT/native/build/gamengine-cli"
+
+if [[ ! -x "$CLI" ]]; then
+    echo "GAMENGINE CLI is not built."
+    echo "Build native/ first."
+    exit 1
+fi
 
 case "${1:-help}" in
-  version)
-    echo "$ENGINE $VERSION"
-    ;;
-  info)
-    echo "Independent Multi-Language Game Engine"
-    echo "Core: C++"
-    echo "Editor: Web"
-    ;;
-  check)
-    echo "Checking project structure..."
-    for folder in src native languages; do
-      if [ -d "$folder" ]; then
-        echo "[OK] $folder"
-      else
-        echo "[MISSING] $folder"
-      fi
-    done
-    ;;
-  help)
-    echo "GAMENGINE CLI"
-    echo "Commands: version, info, check, help"
-    ;;
-  *)
-    echo "Unknown command: $1"
-    exit 1
-    ;;
+    version)
+        echo "GAMENGINE 0.2.0"
+        ;;
+    info)
+        echo "GAMENGINE Language Bridge"
+        echo "Native core: C++20"
+        echo "Public interface: C ABI"
+        ;;
+    run)
+        exec "$CLI"
+        ;;
+    build)
+        cmake -S "$ROOT/native" -B "$ROOT/native/build"
+        cmake --build "$ROOT/native/build"
+        ;;
+    *)
+        echo "GAMENGINE Shell Interface"
+        echo "Commands:"
+        echo "  version"
+        echo "  info"
+        echo "  build"
+        echo "  run"
+        ;;
 esac
