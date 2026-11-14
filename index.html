@@ -2,66 +2,990 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#07110d">
-  <title>GAMENGINE Studio</title>
-  <link rel="stylesheet" href="./styles.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GAMENGINE — World Editor</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Alegreya:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg:#080d0b;
+  --panel:#101916;
+  --panel2:#14211c;
+  --border:#263a30;
+  --green:#00d49a;
+  --green2:#087b5b;
+  --gold:#c8aa70;
+  --text:#e6eee9;
+  --muted:#82938a;
+  --danger:#e66c6c;
+}
+
+* {box-sizing:border-box}
+body {
+  margin:0;
+  height:100vh;
+  overflow:hidden;
+  color:var(--text);
+  background:var(--bg);
+  font-family:Inter,Arial,sans-serif;
+  font-size:12px;
+}
+
+button,input,select {font:inherit}
+button {
+  color:var(--text);
+  background:#192720;
+  border:1px solid var(--border);
+  padding:8px 11px;
+  border-radius:6px;
+  cursor:pointer;
+  transition:.15s;
+}
+button:hover {border-color:var(--green);background:#20382d}
+button.active {background:#07543f;border-color:var(--green);color:#fff}
+button.danger:hover {border-color:var(--danger);color:#ffaaaa}
+input,select {
+  width:100%;
+  color:var(--text);
+  background:#0a110e;
+  border:1px solid var(--border);
+  border-radius:5px;
+  padding:7px;
+  outline:none;
+}
+input:focus,select:focus {border-color:var(--green)}
+label {color:var(--muted);font-size:10px}
+h3 {
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:1.2px;
+  color:var(--gold);
+  margin:0;
+}
+#app {
+  height:100vh;
+  display:grid;
+  grid-template-rows:55px 42px 1fr 25px;
+}
+header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 17px;
+  background:#0c1410;
+  border-bottom:1px solid var(--border);
+}
+.brand {
+  font-family:Alegreya,serif;
+  font-size:25px;
+  font-weight:800;
+  letter-spacing:1px;
+  color:var(--green);
+}
+.brand span {color:var(--gold)}
+.header-left,.header-right,.toolbar {
+  display:flex;
+  align-items:center;
+  gap:9px;
+}
+.project-name {color:var(--muted);font-size:11px}
+.toolbar {
+  padding:5px 12px;
+  background:#0e1712;
+  border-bottom:1px solid var(--border);
+  gap:6px;
+}
+.toolbar button {padding:6px 10px;font-size:11px}
+.toolbar .spacer {flex:1}
+#workspace {
+  min-height:0;
+  display:grid;
+  grid-template-columns:235px minmax(200px,1fr) 270px;
+}
+.panel {
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  background:var(--panel);
+}
+#left {border-right:1px solid var(--border)}
+#right {border-left:1px solid var(--border)}
+.panel-heading {
+  height:39px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 12px;
+  border-bottom:1px solid var(--border);
+}
+.panel-content {padding:12px;overflow:auto;flex:1}
+.section {margin-bottom:19px}
+.section-title {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:10px;
+}
+.scene-item {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px;
+  border-radius:5px;
+  cursor:pointer;
+  color:#c7d4cc;
+}
+.scene-item:hover {background:#1b2a22}
+.scene-item.selected {background:#174333;color:#fff}
+.scene-item .type {color:var(--gold);width:17px}
+.scene-item .eye {margin-left:auto;color:var(--muted)}
+#viewport {
+  position:relative;
+  min-width:0;
+  min-height:0;
+  overflow:hidden;
+  background:#080e0b;
+}
+#viewport canvas {display:block;width:100%;height:100%}
+.viewport-label {
+  position:absolute;
+  top:13px;
+  left:14px;
+  color:#91a79a;
+  pointer-events:none;
+  font-size:10px;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+.viewport-controls {
+  position:absolute;
+  bottom:14px;
+  left:14px;
+  display:flex;
+  gap:5px;
+}
+.viewport-controls button {background:#101a15dd}
+#inspector-empty {color:var(--muted);line-height:1.7}
+.property {margin:12px 0}
+.property label {display:block;margin-bottom:6px}
+.vector {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:5px;
+}
+.vector input {text-align:center}
+.axis-x {color:#ee7777}
+.axis-y {color:#70d69a}
+.axis-z {color:#78a9ed}
+.color-row {display:flex;gap:8px;align-items:center}
+input[type=color] {height:32px;padding:2px;width:48px}
+input[type=checkbox] {width:auto;accent-color:var(--green)}
+#status {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 12px;
+  background:#0b120e;
+  color:var(--muted);
+  border-top:1px solid var(--border);
+  font-size:10px;
+}
+#toast {
+  position:absolute;
+  bottom:55px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#143c2d;
+  border:1px solid var(--green);
+  padding:10px 17px;
+  border-radius:7px;
+  opacity:0;
+  pointer-events:none;
+  transition:.2s;
+  z-index:10;
+}
+#toast.show {opacity:1}
+.separator {width:1px;height:22px;background:var(--border);margin:0 3px}
+.muted {color:var(--muted)}
+.small {font-size:10px}
+.full {width:100%}
+#playState {color:var(--green);font-weight:700}
+@media(max-width:850px) {
+  #workspace {grid-template-columns:180px minmax(180px,1fr)}
+  #right {display:none}
+}
+@media(max-width:560px) {
+  #workspace {grid-template-columns:1fr}
+  #left {display:none}
+  .brand {font-size:20px}
+  .project-name {display:none}
+}
+</style>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+  }
+}
+</script>
 </head>
+
 <body>
-  <div id="app">
-    <header class="topbar">
-      <div class="brand">
-        <span class="brand-mark">G</span>
-        <span>GAMENGINE</span>
-        <span class="version">0.1.0</span>
-      </div>
+<div id="app">
 
-      <div class="top-actions">
-        <button id="new-scene">New Scene</button>
-        <button id="play-button" class="primary">▶ Play</button>
-      </div>
-    </header>
-
-    <main class="workspace">
-      <aside class="panel hierarchy">
-        <div class="panel-heading">
-          <span>SCENE HIERARCHY</span>
-          <button id="add-object" title="Add cube">+</button>
-        </div>
-        <div id="object-list" class="object-list"></div>
-      </aside>
-
-      <section class="viewport-panel">
-        <div class="viewport-heading">
-          <span>VIEWPORT</span>
-          <span id="engine-status">INITIALIZING</span>
-        </div>
-
-        <div id="viewport">
-          <div class="viewport-label">GAMENGINE 3D</div>
-        </div>
-
-        <div class="viewport-footer">
-          <span>Perspective</span>
-          <span>WebGL Renderer</span>
-        </div>
-      </section>
-
-      <aside class="panel inspector">
-        <div class="panel-heading">INSPECTOR</div>
-        <div id="inspector-content">
-          <p class="muted">Select an object to inspect it.</p>
-        </div>
-      </aside>
-    </main>
-
-    <footer class="statusbar">
-      <span id="status-message">GAMENGINE ready</span>
-      <span>Independent Engine Project</span>
-    </footer>
+<header>
+  <div class="header-left">
+    <div class="brand">GAM<span>ENGINE</span></div>
+    <div class="separator"></div>
+    <div class="project-name">UNTITLED PROJECT</div>
   </div>
+  <div class="header-right">
+    <span id="playState">EDIT MODE</span>
+    <button id="saveBtn">Save Project</button>
+  </div>
+</header>
 
-  <script type="module" src="./src/main.js"></script>
+<div class="toolbar">
+  <button id="addCube">+ Cube</button>
+  <button id="addSphere">+ Sphere</button>
+  <button id="addPlane">+ Plane</button>
+  <button id="addCylinder">+ Cylinder</button>
+  <div class="separator"></div>
+  <button id="moveBtn" class="active">Move</button>
+  <button id="rotateBtn">Rotate</button>
+  <button id="scaleBtn">Scale</button>
+  <div class="spacer"></div>
+  <button id="duplicateBtn">Duplicate</button>
+  <button id="deleteBtn" class="danger">Delete</button>
+  <button id="playBtn">▶ Play</button>
+</div>
+
+<div id="workspace">
+
+  <aside class="panel" id="left">
+    <div class="panel-heading">
+      <h3>Scene Hierarchy</h3>
+      <span class="muted small" id="objectCount">0 objects</span>
+    </div>
+    <div class="panel-content">
+      <div class="section">
+        <div class="section-title">
+          <h3>Scene Objects</h3>
+          <span class="muted small">ROOT</span>
+        </div>
+        <div id="hierarchy"></div>
+      </div>
+      <div class="section">
+        <div class="section-title"><h3>World Settings</h3></div>
+        <div class="property">
+          <label>Background Color</label>
+          <input id="backgroundColor" type="color" value="#101a17">
+        </div>
+        <div class="property">
+          <label>Grid Visibility</label>
+          <input id="gridToggle" type="checkbox" checked>
+        </div>
+        <div class="property">
+          <label>World Grid Size</label>
+          <select id="gridSize">
+            <option value="10">10 × 10</option>
+            <option value="20" selected>20 × 20</option>
+            <option value="50">50 × 50</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main id="viewport">
+    <div class="viewport-label">GAMENGINE 3D VIEWPORT</div>
+    <div class="viewport-controls">
+      <button id="focusBtn">Focus Selected</button>
+      <button id="resetCameraBtn">Reset Camera</button>
+    </div>
+  </main>
+
+  <aside class="panel" id="right">
+    <div class="panel-heading">
+      <h3>Inspector</h3>
+      <span class="muted small" id="selectedType">NONE</span>
+    </div>
+    <div class="panel-content">
+      <div id="inspector-empty">
+        Select an object in the scene hierarchy or viewport to edit its properties.
+      </div>
+      <div id="inspector" style="display:none">
+        <div class="section">
+          <div class="section-title"><h3>Object</h3></div>
+          <div class="property">
+            <label>Object Name</label>
+            <input id="objectName">
+          </div>
+          <div class="property">
+            <label>Object Visibility</label>
+            <input id="objectVisible" type="checkbox" checked>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title"><h3>Transform</h3></div>
+          <div class="property">
+            <label>Position</label>
+            <div class="vector">
+              <input id="px" type="number" step=".1" class="axis-x">
+              <input id="py" type="number" step=".1" class="axis-y">
+              <input id="pz" type="number" step=".1" class="axis-z">
+            </div>
+          </div>
+          <div class="property">
+            <label>Rotation (degrees)</label>
+            <div class="vector">
+              <input id="rx" type="number" step="1" class="axis-x">
+              <input id="ry" type="number" step="1" class="axis-y">
+              <input id="rz" type="number" step="1" class="axis-z">
+            </div>
+          </div>
+          <div class="property">
+            <label>Scale</label>
+            <div class="vector">
+              <input id="sx" type="number" step=".1" min=".01" class="axis-x">
+              <input id="sy" type="number" step=".1" min=".01" class="axis-y">
+              <input id="sz" type="number" step=".1" min=".01" class="axis-z">
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title"><h3>Material</h3></div>
+          <div class="property">
+            <label>Base Color</label>
+            <div class="color-row">
+              <input id="materialColor" type="color" value="#00a879">
+              <span class="muted small">Material tint</span>
+            </div>
+          </div>
+          <div class="property">
+            <label>Metalness</label>
+            <input id="metalness" type="range" min="0" max="1" step=".01" value=".1">
+          </div>
+          <div class="property">
+            <label>Roughness</label>
+            <input id="roughness" type="range" min="0" max="1" step=".01" value=".5">
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title"><h3>Object Actions</h3></div>
+          <button class="full" id="focusObjectBtn">Focus Object</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<footer id="status">
+  <span>GAMENGINE WORLD EDITOR · WEB EDITION</span>
+  <span id="statusText">Ready</span>
+  <span>Three.js Renderer</span>
+</footer>
+
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { TransformControls } from "three/addons/controls/TransformControls.js";
+
+const $ = id => document.getElementById(id);
+
+let scene, camera, renderer, orbit, transform;
+let selected = null;
+let objectId = 0;
+let isPlaying = false;
+let savedCamera = null;
+let grid;
+const objects = new Map();
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+
+const viewport = $("viewport");
+
+function toast(message) {
+  const element = $("toast");
+  element.textContent = message;
+  element.classList.add("show");
+  setTimeout(() => element.classList.remove("show"), 1800);
+}
+
+function status(message) {
+  $("statusText").textContent = message;
+}
+
+function init() {
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color("#101a17");
+
+  camera = new THREE.PerspectiveCamera(
+    55,
+    viewport.clientWidth / viewport.clientHeight,
+    0.1,
+    1000
+  );
+  camera.position.set(9, 7, 11);
+
+  renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    powerPreference: "high-performance"
+  });
+
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(viewport.clientWidth, viewport.clientHeight);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.15;
+
+  viewport.appendChild(renderer.domElement);
+
+  orbit = new OrbitControls(camera, renderer.domElement);
+  orbit.enableDamping = true;
+  orbit.target.set(0, 1, 0);
+
+  transform = new TransformControls(camera, renderer.domElement);
+  transform.addEventListener("dragging-changed", event => {
+    orbit.enabled = !event.value;
+  });
+  transform.addEventListener("objectChange", updateInspector);
+  scene.add(transform);
+
+  const ambient = new THREE.HemisphereLight(0xd9f5e8, 0x263a30, 2);
+  scene.add(ambient);
+
+  const sun = new THREE.DirectionalLight(0xffedcf, 3);
+  sun.position.set(7, 12, 6);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(1024, 1024);
+  sun.shadow.camera.left = -20;
+  sun.shadow.camera.right = 20;
+  sun.shadow.camera.top = 20;
+  sun.shadow.camera.bottom = -20;
+  scene.add(sun);
+
+  grid = new THREE.GridHelper(20, 40, 0x167c5a, 0x294337);
+  scene.add(grid);
+
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(200, 200),
+    new THREE.MeshStandardMaterial({
+      color: 0x101915,
+      roughness: 0.95,
+      metalness: 0
+    })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -0.03;
+  ground.receiveShadow = true;
+  ground.name = "Ground";
+  scene.add(ground);
+
+  addObject("Box", "Cube");
+  addObject("Sphere", "Sphere");
+  objects.get(1).position.set(0, 0.5, 0);
+  objects.get(2).position.set(2, 1, 0);
+
+  selectObject(objects.get(1));
+  updateHierarchy();
+
+  renderer.domElement.addEventListener("pointerdown", onViewportClick);
+  window.addEventListener("resize", resize);
+  animate();
+}
+
+function createGeometry(type) {
+  switch (type) {
+    case "Cube":
+      return new THREE.BoxGeometry(1, 1, 1);
+    case "Sphere":
+      return new THREE.SphereGeometry(0.65, 32, 20);
+    case "Plane":
+      return new THREE.PlaneGeometry(2, 2);
+    case "Cylinder":
+      return new THREE.CylinderGeometry(0.55, 0.55, 1.3, 32);
+    default:
+      return new THREE.BoxGeometry(1, 1, 1);
+  }
+}
+
+function addObject(type, name = null) {
+  const geometry = createGeometry(type);
+  const material = new THREE.MeshStandardMaterial({
+    color: type === "Sphere" ? "#c8aa70" : "#00a879",
+    roughness: 0.5,
+    metalness: 0.1
+  });
+
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  mesh.position.set(
+    (Math.random() - 0.5) * 2,
+    type === "Plane" ? 0.02 : 0.8,
+    (Math.random() - 0.5) * 2
+  );
+
+  mesh.userData.id = ++objectId;
+  mesh.userData.type = type;
+  mesh.name = name || `${type}_${objectId}`;
+
+  scene.add(mesh);
+  objects.set(objectId, mesh);
+
+  selectObject(mesh);
+  updateHierarchy();
+  status(`Created ${mesh.name}`);
+  return mesh;
+}
+
+function selectObject(object) {
+  selected = object;
+
+  if (object) {
+    transform.attach(object);
+    $("inspector-empty").style.display = "none";
+    $("inspector").style.display = "block";
+    $("selectedType").textContent = object.userData.type || "OBJECT";
+    populateInspector();
+  } else {
+    transform.detach();
+    $("inspector-empty").style.display = "block";
+    $("inspector").style.display = "none";
+    $("selectedType").textContent = "NONE";
+  }
+
+  updateHierarchy();
+}
+
+function populateInspector() {
+  if (!selected) return;
+
+  $("objectName").value = selected.name;
+  $("objectVisible").checked = selected.visible;
+
+  $("px").value = selected.position.x.toFixed(2);
+  $("py").value = selected.position.y.toFixed(2);
+  $("pz").value = selected.position.z.toFixed(2);
+
+  $("rx").value = THREE.MathUtils.radToDeg(selected.rotation.x).toFixed(1);
+  $("ry").value = THREE.MathUtils.radToDeg(selected.rotation.y).toFixed(1);
+  $("rz").value = THREE.MathUtils.radToDeg(selected.rotation.z).toFixed(1);
+
+  $("sx").value = selected.scale.x.toFixed(2);
+  $("sy").value = selected.scale.y.toFixed(2);
+  $("sz").value = selected.scale.z.toFixed(2);
+
+  const material = selected.material;
+  if (material && material.color) {
+    $("materialColor").value = "#" + material.color.getHexString();
+    $("metalness").value = material.metalness ?? 0;
+    $("roughness").value = material.roughness ?? 0.5;
+  }
+}
+
+function updateInspector() {
+  if (selected) populateInspector();
+}
+
+function updateHierarchy() {
+  const container = $("hierarchy");
+  container.innerHTML = "";
+
+  for (const [id, object] of objects) {
+    const item = document.createElement("div");
+    item.className = "scene-item" + (selected === object ? " selected" : "");
+
+    const type = document.createElement("span");
+    type.className = "type";
+    type.textContent = object.userData.type === "Cube" ? "▣" :
+      object.userData.type === "Sphere" ? "◉" :
+      object.userData.type === "Plane" ? "▱" : "◇";
+
+    const name = document.createElement("span");
+    name.textContent = object.name;
+
+    const visibility = document.createElement("span");
+    visibility.className = "eye";
+    visibility.textContent = object.visible ? "◉" : "○";
+
+    item.append(type, name, visibility);
+    item.addEventListener("click", () => selectObject(object));
+
+    container.appendChild(item);
+  }
+
+  $("objectCount").textContent = `${objects.size} objects`;
+}
+
+function onViewportClick(event) {
+  if (isPlaying || transform.dragging) return;
+
+  const rect = renderer.domElement.getBoundingClientRect();
+
+  pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+  raycaster.setFromCamera(pointer, camera);
+
+  const meshes = [...objects.values()].filter(object => object.visible);
+  const hits = raycaster.intersectObjects(meshes, false);
+
+  if (hits.length) {
+    selectObject(hits[0].object);
+  }
+}
+
+function setTransformMode(mode) {
+  transform.setMode(mode);
+  ["moveBtn", "rotateBtn", "scaleBtn"].forEach(id => $(id).classList.remove("active"));
+
+  if (mode === "translate") $("moveBtn").classList.add("active");
+  if (mode === "rotate") $("rotateBtn").classList.add("active");
+  if (mode === "scale") $("scaleBtn").classList.add("active");
+}
+
+function deleteSelected() {
+  if (!selected) return;
+
+  const id = selected.userData.id;
+  scene.remove(selected);
+  selected.geometry.dispose();
+  selected.material.dispose();
+  objects.delete(id);
+
+  selected = null;
+  selectObject(null);
+  updateHierarchy();
+  toast("Object deleted");
+}
+
+function duplicateSelected() {
+  if (!selected) return;
+
+  const copy = selected.clone();
+  copy.userData.id = ++objectId;
+  copy.name = selected.name + "_Copy";
+  copy.position.x += 1.2;
+
+  scene.add(copy);
+  objects.set(objectId, copy);
+  selectObject(copy);
+  toast("Object duplicated");
+}
+
+function focusSelected() {
+  if (!selected) return;
+
+  orbit.target.copy(selected.position);
+  const direction = new THREE.Vector3(1, 0.7, 1).normalize();
+  camera.position.copy(selected.position).add(direction.multiplyScalar(6));
+  orbit.update();
+}
+
+function resetCamera() {
+  camera.position.set(9, 7, 11);
+  orbit.target.set(0, 1, 0);
+  orbit.update();
+}
+
+function resize() {
+  if (!renderer || !camera) return;
+
+  const width = viewport.clientWidth;
+  const height = viewport.clientHeight;
+
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  renderer.setSize(width, height);
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  orbit.update();
+  renderer.render(scene, camera);
+}
+
+function updateVector(axis, value) {
+  if (!selected) return;
+
+  const fields = {
+    p: selected.position,
+    r: selected.rotation,
+    s: selected.scale
+  };
+
+  const [prefix, coordinate] = axis.split("");
+  const target = fields[prefix];
+  let number = Number(value);
+
+  if (!Number.isFinite(number)) return;
+
+  if (prefix === "r") number = THREE.MathUtils.degToRad(number);
+  if (prefix === "s") number = Math.max(0.01, number);
+
+  target[coordinate] = number;
+  updateHierarchy();
+}
+
+function serializeProject() {
+  return {
+    engine: "GAMENGINE",
+    version: "0.1.0",
+    created: new Date().toISOString(),
+    background: "#" + scene.background.getHexString(),
+    camera: {
+      position: camera.position.toArray(),
+      target: orbit.target.toArray()
+    },
+    objects: [...objects.values()].map(object => ({
+      id: object.userData.id,
+      name: object.name,
+      type: object.userData.type,
+      position: object.position.toArray(),
+      rotation: object.rotation.toArray(),
+      scale: object.scale.toArray(),
+      visible: object.visible,
+      color: "#" + object.material.color.getHexString(),
+      metalness: object.material.metalness,
+      roughness: object.material.roughness
+    }))
+  };
+}
+
+function saveProject() {
+  const data = JSON.stringify(serializeProject(), null, 2);
+  const blob = new Blob([data], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = "gamengine-project.json";
+  link.click();
+
+  URL.revokeObjectURL(url);
+  toast("Project exported");
+}
+
+function loadProject(data) {
+  if (!data || data.engine !== "GAMENGINE" || !Array.isArray(data.objects)) {
+    throw new Error("Invalid GAMENGINE project file");
+  }
+
+  for (const object of objects.values()) {
+    scene.remove(object);
+    object.geometry.dispose();
+    object.material.dispose();
+  }
+
+  objects.clear();
+  selected = null;
+  objectId = 0;
+
+  for (const item of data.objects) {
+    const object = new THREE.Mesh(
+      createGeometry(item.type),
+      new THREE.MeshStandardMaterial({
+        color: item.color || "#00a879",
+        metalness: item.metalness ?? 0.1,
+        roughness: item.roughness ?? 0.5
+      })
+    );
+
+    object.name = item.name;
+    object.userData.id = item.id;
+    object.userData.type = item.type;
+    object.position.fromArray(item.position);
+    object.rotation.fromArray(item.rotation);
+    object.scale.fromArray(item.scale);
+    object.visible = item.visible !== false;
+    object.castShadow = true;
+    object.receiveShadow = true;
+
+    scene.add(object);
+    objects.set(item.id, object);
+    objectId = Math.max(objectId, item.id);
+  }
+
+  if (data.background) {
+    scene.background = new THREE.Color(data.background);
+    $("backgroundColor").value = data.background;
+  }
+
+  if (data.camera) {
+    camera.position.fromArray(data.camera.position);
+    orbit.target.fromArray(data.camera.target);
+  }
+
+  selectObject(null);
+  updateHierarchy();
+  toast("Project loaded");
+}
+
+function togglePlay() {
+  isPlaying = !isPlaying;
+
+  $("playBtn").textContent = isPlaying ? "■ Stop" : "▶ Play";
+  $("playState").textContent = isPlaying ? "PLAY MODE" : "EDIT MODE";
+
+  if (isPlaying) {
+    savedCamera = {
+      position: camera.position.clone(),
+      target: orbit.target.clone()
+    };
+    transform.detach();
+    toast("Play mode started");
+  } else {
+    if (savedCamera) {
+      camera.position.copy(savedCamera.position);
+      orbit.target.copy(savedCamera.target);
+      orbit.update();
+    }
+    if (selected) transform.attach(selected);
+    toast("Play mode stopped");
+  }
+}
+
+$("addCube").onclick = () => addObject("Cube");
+$("addSphere").onclick = () => addObject("Sphere");
+$("addPlane").onclick = () => addObject("Plane");
+$("addCylinder").onclick = () => addObject("Cylinder");
+
+$("moveBtn").onclick = () => setTransformMode("translate");
+$("rotateBtn").onclick = () => setTransformMode("rotate");
+$("scaleBtn").onclick = () => setTransformMode("scale");
+
+$("deleteBtn").onclick = deleteSelected;
+$("duplicateBtn").onclick = duplicateSelected;
+$("focusBtn").onclick = focusSelected;
+$("focusObjectBtn").onclick = focusSelected;
+$("resetCameraBtn").onclick = resetCamera;
+$("saveBtn").onclick = saveProject;
+$("playBtn").onclick = togglePlay;
+
+$("objectName").addEventListener("input", event => {
+  if (!selected) return;
+  selected.name = event.target.value;
+  updateHierarchy();
+});
+
+$("objectVisible").onchange = event => {
+  if (!selected) return;
+  selected.visible = event.target.checked;
+  updateHierarchy();
+};
+
+["px","py","pz","rx","ry","rz","sx","sy","sz"].forEach(id => {
+  $(id).addEventListener("change", event => {
+    const prefix = id[0];
+    const axis = id[1];
+    updateVector(prefix + axis, event.target.value);
+  });
+});
+
+$("materialColor").oninput = event => {
+  if (!selected) return;
+  selected.material.color.set(event.target.value);
+};
+
+$("metalness").oninput = event => {
+  if (!selected) return;
+  selected.material.metalness = Number(event.target.value);
+};
+
+$("roughness").oninput = event => {
+  if (!selected) return;
+  selected.material.roughness = Number(event.target.value);
+};
+
+$("backgroundColor").oninput = event => {
+  scene.background.set(event.target.value);
+};
+
+$("gridToggle").onchange = event => {
+  grid.visible = event.target.checked;
+};
+
+$("gridSize").onchange = event => {
+  scene.remove(grid);
+  grid.geometry.dispose();
+  grid.material.dispose();
+
+  const size = Number(event.target.value);
+  grid = new THREE.GridHelper(size, size * 2, 0x167c5a, 0x294337);
+  grid.visible = $("gridToggle").checked;
+  scene.add(grid);
+};
+
+document.addEventListener("keydown", event => {
+  if (["INPUT","TEXTAREA","SELECT"].includes(document.activeElement.tagName)) return;
+
+  if (event.key === "w" || event.key === "W") setTransformMode("translate");
+  if (event.key === "e" || event.key === "E") setTransformMode("rotate");
+  if (event.key === "r" || event.key === "R") setTransformMode("scale");
+
+  if (event.key === "Delete" || event.key === "Backspace") deleteSelected();
+
+  if (event.ctrlKey && event.key.toLowerCase() === "d") {
+    event.preventDefault();
+    duplicateSelected();
+  }
+
+  if (event.ctrlKey && event.key.toLowerCase() === "s") {
+    event.preventDefault();
+    saveProject();
+  }
+
+  if (event.key === "f") focusSelected();
+});
+
+const fileInput = document.createElement("input");
+fileInput.type = "file";
+fileInput.accept = ".json,application/json";
+fileInput.style.display = "none";
+document.body.appendChild(fileInput);
+
+fileInput.addEventListener("change", async () => {
+  const file = fileInput.files[0];
+  if (!file) return;
+
+  try {
+    const data = JSON.parse(await file.text());
+    loadProject(data);
+  } catch (error) {
+    toast("Could not load project: " + error.message);
+  }
+
+  fileInput.value = "";
+});
+
+const loadButton = document.createElement("button");
+loadButton.textContent = "Load Project";
+loadButton.onclick = () => fileInput.click();
+document.querySelector(".header-right").prepend(loadButton);
+
+try {
+  init();
+} catch (error) {
+  console.error(error);
+  status("Engine failed to initialize");
+  toast("Could not initialize the 3D engine");
+}
+</script>
 </body>
 </html>
