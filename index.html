@@ -1,0 +1,67 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#07110d">
+  <title>GAMENGINE Studio</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">G</span>
+        <span>GAMENGINE</span>
+        <span class="version">0.1.0</span>
+      </div>
+
+      <div class="top-actions">
+        <button id="new-scene">New Scene</button>
+        <button id="play-button" class="primary">▶ Play</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="panel hierarchy">
+        <div class="panel-heading">
+          <span>SCENE HIERARCHY</span>
+          <button id="add-object" title="Add cube">+</button>
+        </div>
+        <div id="object-list" class="object-list"></div>
+      </aside>
+
+      <section class="viewport-panel">
+        <div class="viewport-heading">
+          <span>VIEWPORT</span>
+          <span id="engine-status">INITIALIZING</span>
+        </div>
+
+        <div id="viewport">
+          <div class="viewport-label">GAMENGINE 3D</div>
+        </div>
+
+        <div class="viewport-footer">
+          <span>Perspective</span>
+          <span>WebGL Renderer</span>
+        </div>
+      </section>
+
+      <aside class="panel inspector">
+        <div class="panel-heading">INSPECTOR</div>
+        <div id="inspector-content">
+          <p class="muted">Select an object to inspect it.</p>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="statusbar">
+      <span id="status-message">GAMENGINE ready</span>
+      <span>Independent Engine Project</span>
+    </footer>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
