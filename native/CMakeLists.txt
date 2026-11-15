@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 project(GAMENGINE
-    VERSION 0.2.0
+    VERSION 0.3.0
     DESCRIPTION "GAMENGINE Multi-Language Game Engine"
     LANGUAGES C CXX
 )
@@ -24,8 +24,35 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # ==================================================
 
 include(GNUInstallDirs)
+include(CTest)
 
 find_package(Threads REQUIRED)
+
+option(GAMENGINE_ENABLE_JAVA
+    "Enable Java JNI integration"
+    ON
+)
+
+option(GAMENGINE_BUILD_TESTS
+    "Build GAMENGINE tests"
+    ON
+)
+
+# ==================================================
+# COMMON COMPILER CONFIGURATION
+# ==================================================
+
+function(gamengine_configure_target target)
+    if(MSVC)
+        target_compile_options(${target} PRIVATE /W4)
+    else()
+        target_compile_options(${target} PRIVATE
+            -Wall
+            -Wextra
+            -Wpedantic
+        )
+    endif()
+endfunction()
 
 # ==================================================
 # GAMENGINE NATIVE CORE
@@ -42,13 +69,11 @@ target_include_directories(gamengine_core
 )
 
 target_compile_definitions(gamengine_core
-    PRIVATE
-        GAMENGINE_BUILD
+    PRIVATE GAMENGINE_BUILD
 )
 
 target_link_libraries(gamengine_core
-    PRIVATE
-        Threads::Threads
+    PRIVATE Threads::Threads
 )
 
 set_target_properties(gamengine_core PROPERTIES
@@ -57,6 +82,8 @@ set_target_properties(gamengine_core PROPERTIES
     CXX_VISIBILITY_PRESET hidden
     VISIBILITY_INLINES_HIDDEN YES
 )
+
+gamengine_configure_target(gamengine_core)
 
 # ==================================================
 # GAMENGINE CLI
@@ -67,18 +94,54 @@ add_executable(gamengine-cli
 )
 
 target_link_libraries(gamengine-cli
-    PRIVATE
-        gamengine_core
+    PRIVATE gamengine_core
 )
+
+gamengine_configure_target(gamengine-cli)
+
+# ==================================================
+# GAMENGINE WORLD SYSTEMS
+# ==================================================
+
+add_library(gamengine_world INTERFACE)
+
+target_include_directories(gamengine_world
+    INTERFACE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_compile_features(gamengine_world
+    INTERFACE cxx_std_17
+)
+
+# ==================================================
+# TERRAIN GENERATION TEST
+# ==================================================
+
+if(GAMENGINE_BUILD_TESTS AND BUILD_TESTING)
+
+    add_executable(gamengine_terrain_test
+        terrain_test.cpp
+    )
+
+    target_link_libraries(gamengine_terrain_test
+        PRIVATE gamengine_world
+    )
+
+    gamengine_configure_target(gamengine_terrain_test)
+
+    add_test(
+        NAME terrain_generation
+        COMMAND gamengine_terrain_test
+    )
+
+endif()
 
 # ==================================================
 # JAVA JNI BRIDGE
 # ==================================================
 
-option(GAMENGINE_ENABLE_JAVA
-    "Enable Java JNI integration"
-    ON
-)
+set(GAMENGINE_JAVA_ENABLED OFF)
 
 if(GAMENGINE_ENABLE_JAVA)
 
@@ -106,6 +169,10 @@ if(GAMENGINE_ENABLE_JAVA)
             OUTPUT_NAME gamengine_java
         )
 
+        gamengine_configure_target(gamengine_java)
+
+        set(GAMENGINE_JAVA_ENABLED ON)
+
         message(STATUS "GAMENGINE: Java JNI enabled")
 
     else()
@@ -114,43 +181,6 @@ if(GAMENGINE_ENABLE_JAVA)
             "GAMENGINE: JNI not found; Java bridge disabled"
         )
 
-    endif()
-
-endif()
-
-# ==================================================
-# COMPILER WARNINGS
-# ==================================================
-
-if(MSVC)
-
-    target_compile_options(gamengine_core PRIVATE /W4)
-    target_compile_options(gamengine-cli PRIVATE /W4)
-
-    if(TARGET gamengine_java)
-        target_compile_options(gamengine_java PRIVATE /W4)
-    endif()
-
-else()
-
-    target_compile_options(gamengine_core PRIVATE
-        -Wall
-        -Wextra
-        -Wpedantic
-    )
-
-    target_compile_options(gamengine-cli PRIVATE
-        -Wall
-        -Wextra
-        -Wpedantic
-    )
-
-    if(TARGET gamengine_java)
-        target_compile_options(gamengine_java PRIVATE
-            -Wall
-            -Wextra
-            -Wpedantic
-        )
     endif()
 
 endif()
@@ -186,13 +216,18 @@ endif()
 # BUILD SUMMARY
 # ==================================================
 
-message(STATUS "====================================")
+message(STATUS "")
+message(STATUS "========================================")
 message(STATUS " GAMENGINE ${PROJECT_VERSION}")
-message(STATUS "====================================")
+message(STATUS " Native Engine Configuration")
+message(STATUS "========================================")
 message(STATUS "C Standard:       ${CMAKE_C_STANDARD}")
 message(STATUS "C++ Standard:     ${CMAKE_CXX_STANDARD}")
 message(STATUS "Native Core:      Enabled")
 message(STATUS "C ABI:            Enabled")
 message(STATUS "Native CLI:       Enabled")
-message(STATUS "Java JNI:         ${JNI_FOUND}")
-message(STATUS "====================================")
+message(STATUS "World Systems:    Enabled")
+message(STATUS "Terrain Tests:    ${GAMENGINE_BUILD_TESTS}")
+message(STATUS "Java JNI:         ${GAMENGINE_JAVA_ENABLED}")
+message(STATUS "========================================")
+message(STATUS "")
